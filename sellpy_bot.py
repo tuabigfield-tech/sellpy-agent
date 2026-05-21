@@ -9,10 +9,13 @@ CI / GHA    : python sellpy_bot.py --once   (headless, single run, no scheduler)
 import logging
 import os
 import sys
+import time
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from dotenv import load_dotenv
 from playwright.sync_api import TimeoutError as PWTimeout, sync_playwright
+
+import sheets_log
 
 load_dotenv()
 
@@ -69,6 +72,9 @@ def run_session():
         return
 
     log.info("Starting session…")
+    t_start = time.monotonic()
+    _item_id = "n/a"
+    _error = ""
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=HEADLESS, slow_mo=SLOW_MO)
@@ -141,6 +147,7 @@ def run_session():
                     if add_btn.is_visible():
                         product_url = candidate_url
                         item_id = href.rstrip("/").split("/item/")[-1].split("?")[0]
+                        _item_id = item_id
                         break
                 except PWTimeout:
                     log.info("Add-to-cart not available, skipping…")
@@ -194,9 +201,12 @@ def run_session():
                 )
             if removed:
                 log.info("Session completed successfully.")
+                sheets_log.log_run("success", _item_id, time.monotonic() - t_start)
 
         except Exception as exc:
+            _error = str(exc)
             log.error(f"Unexpected error: {exc}", exc_info=True)
+            sheets_log.log_run("failure", _item_id, time.monotonic() - t_start, _error)
             try:
                 page.screenshot(path="error_unexpected.png")
             except Exception:

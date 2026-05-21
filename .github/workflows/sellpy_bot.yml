@@ -37,4 +37,6 @@ jobs:
           SELLPY_EMAIL: ${{ secrets.SELLPY_EMAIL }}
           SELLPY_PASSWORD: ${{ secrets.SELLPY_PASSWORD }}
           HEADLESS: "true"
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
         run: python sellpy_bot.py --once
