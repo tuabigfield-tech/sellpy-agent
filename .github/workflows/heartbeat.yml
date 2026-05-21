@@ -1,0 +1,47 @@
+name: 24h Heartbeat
+
+# Runs every 6 hours via cron, and can be triggered manually.
+# Each activation loops the bot every 30 minutes for ~5.5 hours,
+# giving reliable coverage until the main cron schedule stabilises.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'   # 00:00, 06:00, 12:00, 18:00 UTC
+
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360     # 6-hour GitHub Actions maximum
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run bot every 30 minutes (11 iterations ≈ 5.5 hours)
+        env:
+          SELLPY_EMAIL: ${{ secrets.SELLPY_EMAIL }}
+          SELLPY_PASSWORD: ${{ secrets.SELLPY_PASSWORD }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          for i in $(seq 1 11); do
+            echo ""
+            echo "=== Run $i / 11 at $(date '+%Y-%m-%d %H:%M:%S UTC') ==="
+            python sellpy_bot.py || echo "Run $i failed — continuing loop"
+            if [ $i -lt 11 ]; then
+              echo "Sleeping 30 minutes until next run..."
+              sleep 1800
+            fi
+          done
+          echo "Loop complete."
