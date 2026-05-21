@@ -1,0 +1,36 @@
+name: Sellpy Cart Bot
+
+# 45 min doesn't divide evenly into 60, so the closest clean GitHub Actions
+# schedule is every 30 minutes. Change to '0 * * * *' for every hour instead.
+on:
+  schedule:
+    - cron: '0,30 * * * *'   # runs at :00 and :30 of every hour (UTC)
+  workflow_dispatch:           # allows manual trigger from the Actions tab
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8         # kill the job if it hangs
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright Chromium + system deps
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run session
+        env:
+          SELLPY_EMAIL: ${{ secrets.SELLPY_EMAIL }}
+          SELLPY_PASSWORD: ${{ secrets.SELLPY_PASSWORD }}
+          HEADLESS: "true"
+        run: python sellpy_bot.py --once
