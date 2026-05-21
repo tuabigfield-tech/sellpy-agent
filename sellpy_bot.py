@@ -159,10 +159,16 @@ def run_session():
             # Small pause so the cart state settles
             page.wait_for_timeout(3_000)
 
-            # ── 4. Go to cart ─────────────────────────────────────────────────
+            # ── 4. Go to cart and verify item is present ──────────────────────
             log.info("Navigating to cart…")
             page.goto(f"{BASE}/checkout/cart", wait_until="load", timeout=60_000)
             page.wait_for_timeout(3_000)
+
+            log.info(f"Verifying item {item_id} is in cart…")
+            verify_img = page.locator(f"img[src*='{item_id}']").first
+            verify_img.wait_for(state="attached", timeout=15_000)
+            log.info(f"Item {item_id} confirmed in cart. Waiting 2 minutes before removal…")
+            page.wait_for_timeout(120_000)
 
             # ── 5. Remove the exact item we added ────────────────────────────
             log.info(f"Removing item {item_id} from cart…")

@@ -10,7 +10,7 @@ on:
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 8         # kill the job if it hangs
+    timeout-minutes: 12        # kill the job if it hangs (2 min cart wait + buffer)
 
     steps:
       - name: Checkout code
