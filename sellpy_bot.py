@@ -74,6 +74,7 @@ def run_session():
     log.info("Starting session…")
     t_start = time.monotonic()
     _item_id = "n/a"
+    _cart_items = -1
     _error = ""
 
     with sync_playwright() as p:
@@ -191,6 +192,11 @@ def run_session():
                 page.wait_for_timeout(2_000)
                 log.info(f"Item {item_id} removed precisely via img[src*] selector.")
                 removed = True
+                # Count remaining cart items (excludes the item we just removed)
+                _cart_items = page.locator(
+                    "button:not([aria-label='Close banner']):has([data-testid='icon-CLOSE'])"
+                ).count()
+                log.info(f"Remaining cart items: {_cart_items}")
             except PWTimeout:
                 log.warning("Primary remove selector timed out.")
 
@@ -201,12 +207,12 @@ def run_session():
                 )
             if removed:
                 log.info("Session completed successfully.")
-                sheets_log.log_run("success", _item_id, time.monotonic() - t_start)
+                sheets_log.log_run("success", _item_id, time.monotonic() - t_start, _cart_items)
 
         except Exception as exc:
             _error = str(exc)
             log.error(f"Unexpected error: {exc}", exc_info=True)
-            sheets_log.log_run("failure", _item_id, time.monotonic() - t_start, _error)
+            sheets_log.log_run("failure", _item_id, time.monotonic() - t_start, _cart_items, _error)
             try:
                 page.screenshot(path="error_unexpected.png")
             except Exception:
