@@ -1,17 +1,12 @@
 """
 sellpy_bot.py
-Logs in to sellpy.se, adds a product to cart, removes it, then repeats every 45 min.
-
-Local usage : python sellpy_bot.py          (headed browser, scheduler enabled)
-CI / GHA    : python sellpy_bot.py --once   (headless, single run, no scheduler)
-              env HEADLESS=true is also respected.
+Logs in to sellpy.se, adds a product to cart, removes it.
+Runs headless. Triggered exclusively via GitHub Actions — not intended for local use.
 """
 import logging
 import os
-import sys
 import time
 
-from apscheduler.schedulers.blocking import BlockingScheduler
 from dotenv import load_dotenv
 from playwright.sync_api import TimeoutError as PWTimeout, sync_playwright
 
@@ -22,10 +17,8 @@ load_dotenv()
 EMAIL = os.getenv("SELLPY_EMAIL")
 PASSWORD = os.getenv("SELLPY_PASSWORD")
 
-# Headless when HEADLESS=true env var is set OR --once flag is passed (CI mode)
-_CI = "--once" in sys.argv or os.getenv("HEADLESS", "false").lower() == "true"
-HEADLESS = _CI
-SLOW_MO = 0 if _CI else 400
+HEADLESS = True
+SLOW_MO = 0
 
 BASE = "https://www.sellpy.se"
 
@@ -224,31 +217,7 @@ def run_session():
 
 
 def main():
-    if _CI:
-        # GitHub Actions / CI: single run, no scheduler
-        log.info("=== CI MODE: single run ===")
-        run_session()
-        return
-
-    # ── Local: test run then scheduler every 45 minutes ──────────────────────
-    log.info("=== LOCAL MODE: test run then scheduler ===")
     run_session()
-
-    log.info("Test run complete. Starting scheduler (every 45 minutes)…")
-    scheduler = BlockingScheduler()
-    scheduler.add_job(
-        run_session,
-        trigger="interval",
-        minutes=45,
-        id="sellpy_cart_cycle",
-        max_instances=1,
-        coalesce=True,
-    )
-    log.info("Scheduler running. Press Ctrl+C to stop.")
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        log.info("Scheduler stopped.")
 
 
 if __name__ == "__main__":
