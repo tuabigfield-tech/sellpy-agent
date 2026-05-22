@@ -17,10 +17,10 @@ log = logging.getLogger(__name__)
 
 CREDS_JSON = os.getenv("GOOGLE_CREDENTIALS_JSON", "")
 SHEET_ID = os.getenv("GOOGLE_SHEET_ID", "")
-HEADER = ["timestamp_stockholm", "status", "item_id", "duration_seconds", "cart_items", "error"]
+HEADER = ["timestamp_stockholm", "status", "item_id_added", "item_id_removed", "duration_seconds", "cart_items", "error"]
 
 
-def log_run(status: str, item_id: str, duration_seconds: float, cart_items: int = -1, error: str = "") -> None:
+def log_run(status: str, item_id: str, duration_seconds: float, cart_items: int = -1, error: str = "", removed_item_id: str = "") -> None:
     if not CREDS_JSON or not SHEET_ID:
         log.debug("Google Sheets logging skipped — credentials not set.")
         return
@@ -34,7 +34,7 @@ def log_run(status: str, item_id: str, duration_seconds: float, cart_items: int 
 
         ts = datetime.datetime.now(_STOCKHOLM).strftime("%Y-%m-%d %H:%M:%S")
         cart_str = cart_items if cart_items >= 0 else ""
-        ws.append_row([ts, status, item_id, round(duration_seconds, 1), cart_str, error])
-        log.info(f"Run logged to Google Sheets: {status}, item={item_id}, {duration_seconds:.1f}s, cart_items={cart_str}")
+        ws.append_row([ts, status, item_id, removed_item_id, round(duration_seconds, 1), cart_str, error])
+        log.info(f"Run logged to Google Sheets: {status}, added={item_id}, removed={removed_item_id}, {duration_seconds:.1f}s, cart_items={cart_str}")
     except Exception as exc:
         log.warning(f"Google Sheets logging failed (non-fatal): {exc}")

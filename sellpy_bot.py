@@ -67,6 +67,7 @@ def run_session():
     log.info("Starting session…")
     t_start = time.monotonic()
     _item_id = "n/a"
+    _removed_item_id = ""
     _cart_items = -1
     _error = ""
 
@@ -189,6 +190,7 @@ def run_session():
                 btn.wait_for(state="visible", timeout=5_000)
                 btn.click()
                 page.wait_for_timeout(2_000)
+                _removed_item_id = item_id
                 log.info(f"Item {item_id} removed precisely via img[src*] selector.")
                 removed = True
                 # Count remaining cart items (excludes the item we just removed)
@@ -206,12 +208,12 @@ def run_session():
                 )
             if removed:
                 log.info("Session completed successfully.")
-                sheets_log.log_run("success", _item_id, time.monotonic() - t_start, _cart_items)
+                sheets_log.log_run("success", _item_id, time.monotonic() - t_start, _cart_items, removed_item_id=_removed_item_id)
 
         except Exception as exc:
             _error = str(exc)
             log.error(f"Unexpected error: {exc}", exc_info=True)
-            sheets_log.log_run("failure", _item_id, time.monotonic() - t_start, _cart_items, _error)
+            sheets_log.log_run("failure", _item_id, time.monotonic() - t_start, _cart_items, _error, removed_item_id=_removed_item_id)
             try:
                 page.screenshot(path="error_unexpected.png")
             except Exception:
