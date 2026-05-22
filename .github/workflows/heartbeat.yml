@@ -7,7 +7,7 @@ name: 24h Heartbeat
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */5 * * *'   # every 5 hours: 00:00, 05:00, 10:00, 15:00, 20:00 UTC
+    - cron: '0 */6 * * *'   # every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
 
 jobs:
   loop:
