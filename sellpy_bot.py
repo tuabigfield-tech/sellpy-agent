@@ -166,9 +166,13 @@ def run_session():
             page.wait_for_timeout(3_000)
 
             log.info(f"Verifying item {item_id} is in cart…")
-            verify_img = page.locator(f"img[src*='{item_id}']").first
-            verify_img.wait_for(state="attached", timeout=15_000)
-            log.info(f"Item {item_id} confirmed in cart. Waiting 2 minutes before removal…")
+            try:
+                verify_img = page.locator(f"img[src*='{item_id}']").first
+                verify_img.wait_for(state="attached", timeout=30_000)
+                log.info(f"Item {item_id} confirmed in cart.")
+            except PWTimeout:
+                log.warning(f"Cart verification timed out for {item_id} (lazy load) — continuing.")
+            log.info("Waiting 2 minutes before removal…")
             page.wait_for_timeout(120_000)
 
             # ── 5. Remove the exact item we added ────────────────────────────
