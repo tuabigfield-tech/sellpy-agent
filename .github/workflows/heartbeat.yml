@@ -1,10 +1,12 @@
 name: 24h Heartbeat
 
-# Manual fallback only — trigger this if the main cron stops firing.
-# The main sellpy_bot.yml cron now handles all scheduled runs.
+# Primary scheduler. GitHub's native cron is unreliable at high frequency
+# so this loop runs the bot every 30 min for 5.5h, triggered every 6h.
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'   # 00:00, 06:00, 12:00, 18:00 UTC
 
 jobs:
   loop:
