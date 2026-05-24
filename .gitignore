@@ -1,4 +1,5 @@
 .env
+DOCUMENTATION.md
 __pycache__/
 *.py[cod]
 *.png
