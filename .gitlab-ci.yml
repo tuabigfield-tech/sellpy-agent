@@ -1,7 +1,0 @@
-image: python:3.12
-
-run-bot:
-  script:
-    - pip install -r requirements.txt
-    - python -m playwright install --with-deps chromium
-    - python sellpy_bot.py
