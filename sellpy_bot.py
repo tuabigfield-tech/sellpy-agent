@@ -187,10 +187,13 @@ def run_session():
                 img.wait_for(state="attached", timeout=15_000)
                 img.scroll_into_view_if_needed()
                 page.wait_for_timeout(500)
-                # Walk up to the item row (ancestor::div[2]) and find its × button
-                btn = img.locator("xpath=ancestor::div[2]").locator(
-                    "button:has([data-testid='icon-CLOSE'])"
-                ).first
+                # Walk up to the NEAREST ancestor div that actually contains a
+                # trash button, then click it. This is robust to per-item nesting
+                # differences (sale badges etc. add wrapper divs, so a fixed
+                # ancestor depth would target a neighbouring item's button).
+                btn = img.locator(
+                    "xpath=ancestor::div[.//button[descendant::*[@data-testid='icon-TRASH']]][1]"
+                ).locator("button:has([data-testid='icon-TRASH'])").first
                 btn.wait_for(state="visible", timeout=5_000)
                 btn.click()
                 page.wait_for_timeout(2_000)
@@ -199,7 +202,7 @@ def run_session():
                 removed = True
                 # Count remaining cart items (excludes the item we just removed)
                 _cart_items = page.locator(
-                    "button:not([aria-label='Close banner']):has([data-testid='icon-CLOSE'])"
+                    "button:not([aria-label='Close banner']):has([data-testid='icon-TRASH'])"
                 ).count()
                 log.info(f"Remaining cart items: {_cart_items}")
             except PWTimeout:
