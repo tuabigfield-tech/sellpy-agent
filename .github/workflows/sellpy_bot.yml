@@ -5,16 +5,23 @@ name: Sellpy Cart Bot
 on:
   workflow_dispatch:           # triggered by Google Cloud Scheduler
 
+# Prevent overlapping runs (Cloud Scheduler fires every ~20 min). A run still
+# waiting on a runner won't stack up behind the next trigger; the newer run
+# takes over. This avoids queue pile-ups contributing to "runner not acquired".
+concurrency:
+  group: sellpy-cart-bot
+  cancel-in-progress: true
+
 jobs:
   run-bot:
-    runs-on: ubuntu-latest
+    # Pinned instead of ubuntu-latest so a runner-image migration can't surprise
+    # us; 24.04 is the current ubuntu-latest as of 2026-08.
+    runs-on: ubuntu-24.04
     timeout-minutes: 12        # kill the job if it hangs (2 min cart wait + buffer)
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
